@@ -2,10 +2,55 @@
   "name": "ohif-nun-db",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "module": "src/index.ts",
+  "main": "dist/umd/ohif-nun-db/index.umd.js",
+  "watch": {
+    "build": {
+      "patterns": [
+        "src/**/*"
+      ],
+      "extensions": "ts,tsx,js,jsx"
+    }
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "NODE_ENV=production webpack --config .webpack/webpack.prod.js",
+    "watch": "npm-watch"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.6.2",
+    "@babel/core": "^7.21.3",
+    "@babel/plugin-proposal-class-properties": "^7.5.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/plugin-transform-arrow-functions": "^7.2.0",
+    "@babel/plugin-transform-regenerator": "^7.4.5",
+    "@babel/plugin-transform-runtime": "^7.5.0",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/preset-typescript": "^7.21.0",
+    "@types/jest": "^29.5.0",
+    "babel-eslint": "^8.0.3",
+    "babel-loader": "^8.0.0-beta.4",
+    "babel-plugin-inline-react-svg": "^2.0.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^14.1.0",
+    "eslint": "^5.0.1",
+    "eslint-loader": "^2.0.0",
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0",
+    "npm-watch": "^0.11.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.2",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.0",
+    "webpack-merge": "^5.7.3"
+  },
+  "dependencies": {
+    "nun-db-react": "^1.0.1",
+    "@babel/runtime": "7.7.6"
+  }
 }
