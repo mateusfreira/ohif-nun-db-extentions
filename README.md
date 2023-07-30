@@ -18,3 +18,28 @@ OHIF, a widely-used open-source platform for medical imaging.
 
 ## Getting Started
 ...
+
+
+### Install Nundb lib
+* In bash command
+```bash
+yarn add ohif-nun-db
+```
+* platform/app/pluginConfig.json
+```js
+// Add this to the pluginConfig.json in extentions
+    {
+      "packageName": "ohif-nun-db"
+    }
+```
+
+* Add your Nundb configs to your default.js
+```json
+  nunDb: {
+    url: $nunDbUrl,
+    db: $databaseName,
+    user: 'client',
+    token: 'client-pwd',
+  },
+
+```
