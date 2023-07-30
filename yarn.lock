@@ -4065,10 +4065,10 @@ nth-check@^2.0.1:
   dependencies:
     boolbase "^1.0.0"
 
-nun-db-react@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/nun-db-react/-/nun-db-react-1.0.1.tgz#27cc21d42e592602575e0a28c7b0e528dd19db21"
-  integrity sha512-ZIn4kQvtbKHIwuk471Y+5BypFgCTAfzxdBdNjegFyrK5VszI6pMhAhw0tPlDKcjo+LfMlFRrPc1JFQ4S+l6BlA==
+nun-db-react@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/nun-db-react/-/nun-db-react-1.0.3.tgz#8c06e84a8dd76771feca08383b24c8cb83fa59f6"
+  integrity sha512-DlFV2E1xS4zsBNBkuIWEpvXKRkSasf6JMnwr0BAvFNLOptIS8AiiMfGWt7H7GxuXeYzNFtODyj3BFIn+MN91Jg==
   dependencies:
     nun-db "^1.7.0"
 

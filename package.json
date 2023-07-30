@@ -50,7 +50,7 @@
     "webpack-merge": "^5.7.3"
   },
   "dependencies": {
-    "nun-db-react": "^1.0.1",
+    "nun-db-react": "^1.0.3",
     "@babel/runtime": "7.7.6"
   }
 }
