@@ -32,7 +32,8 @@ export default {
         nunDb.watch('client-modeOpen', (event) => {
             // Open the same exam
             if (event.value === document.location.href) return;
-            document.location.href = event.value;
+            //document.location.href = event.value;
+            document.location.href = `${document.location.pathname}${document.location.search}`
         });
         // Registering new services
         //servicesManager.registerService(MyNewService(servicesManager));
