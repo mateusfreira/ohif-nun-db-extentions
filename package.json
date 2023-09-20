@@ -2,7 +2,6 @@
   "name": "ohif-nun-db",
   "version": "1.1.0",
   "description": "",
-  "module": "src/index.ts",
   "main": "dist/umd/ohif-nun-db/index.umd.js",
   "watch": {
     "build": {
