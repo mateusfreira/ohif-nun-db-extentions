@@ -120,7 +120,7 @@ function scheduleCornestoneCameraWatch() {
             });
         } else {
             console.log('not ready yet, will retry again in 500ms');
-            schedule();
+            scheduleCornestoneCameraWatch();
         }
     }, 500);
 }
