@@ -5,6 +5,10 @@ import {
 import React from 'react';
 import * as cornerstone from '@cornerstonejs/core';
 
+
+const nunDbStateHolder = {
+    isRemoteControlEnabled: true,
+};
 const nunDb = connect(
     React,
     window.config.nunDb.url,
@@ -14,9 +18,38 @@ const nunDb = connect(
     true
 );
 
+const getCommandsModule = ({
+    servicesManager,
+}) => {
+    return {
+        definitions: {
+            enalbeNunDb: {
+                commandFn: () => {
+                    servicesManager.services.uiNotificationService.show({
+                        title: 'NunDb',
+                        message: 'Remote control enabled',
+                    });
+                    nunDbStateHolder.isRemoteControlEnabled = true;
+                },
+            },
+            disableNunDb: {
+                commandFn: () => {
+                    servicesManager.services.uiNotificationService.show({
+                        type: 'warning',
+                        title: 'NunDb',
+                        message: 'Remote control disabled',
+                    });
+                    nunDbStateHolder.isRemoteControlEnabled = false;
+                },
+            },
+        },
+        defaultContext: 'CORNERSTONE',
+    };
+}
+
 export default {
     id: 'ohif-nun-db',
-
+    getCommandsModule,
     /**
      * @param {object} params
      * @param {object} params.configuration
@@ -27,13 +60,17 @@ export default {
     async preRegistration({
         servicesManager,
         commandsManager,
-        configuration
+        configuration,
     }) {
-        nunDb.watch('client-modeOpen', (event) => {
-            // Open the same exam
-            if (event.value === document.location.href) return;
-            //document.location.href = event.value;
-            document.location.href = `${document.location.pathname}${document.location.search}`
+        nunDb.watch(`${window.config.nunDb.key}-modeOpen`, (event) => {
+            if(nunDbStateHolder.isRemoteControlEnabled) {
+                console.log('client-modeOpen', event);
+                const newAddress = new URL(event.value);
+                //Only change the address if the path or search has changed
+                if (newAddress.pathname !== document.location.pathname || newAddress.search !== document.location.search) {
+                    document.location.href = `${newAddress.pathname}${newAddress.search}`
+                }
+            }
         });
         // Registering new services
         //servicesManager.registerService(MyNewService(servicesManager));
@@ -42,8 +79,21 @@ export default {
         //console.log(React);
     },
     async onModeEnter() {
-        nunDb.set('client-modeOpen', document.location.href);
-        setTimeout(() => {
+        nunDb.set(`${window.config.nunDb.key}-modeOpen`, document.location.href);
+        scheduleCornestoneCameraWatch();
+;
+    },
+    async onModeExit() {
+        nunDb.set(`${window.config.nunDb.key}-modeOpen`, document.location.href);
+    },
+};
+
+function scheduleCornestoneCameraWatch() {
+    setTimeout(() => {
+        const cornestoneElement = cornerstone.getEnabledElements()[0];
+        const isReady = !!cornestoneElement;
+        if (isReady) {
+
             const viewport = cornerstone.getEnabledElements()[0].viewport;
             const element = viewport.element;
             console.log({
@@ -54,26 +104,32 @@ export default {
             element.addEventListener(cornerstone.Enums.Events.CAMERA_MODIFIED, ((
                 evt: cornerstone.Types.EventTypes.CameraModifiedEvent
             ) => {
-              if(!ignore) {
-                nunDb.set('client-camera', evt.detail.camera);
-                const currentImageIdIndex = viewport.getCurrentImageIdIndex();
-                nunDb.set('client-currentImageIdIndex', { currentImageIdIndex });
-              } else {
-                ignore = false;
-              }
+                if (!ignore) {
+                    nunDb.set(`${window.config.nunDb.key}-camera`, evt.detail.camera);
+                    const currentImageIdIndex = viewport.getCurrentImageIdIndex();
+                    nunDb.set(`${window.config.nunDb.key}-currentImageIdIndex`, {
+                        currentImageIdIndex
+                    });
+                } else {
+                    ignore = false;
+                }
             }) as EventListener);
-            nunDb.watch('client-currentImageIdIndex', (event) => {
-                ignore = true;
-                viewport.setImageIdIndex(event.value.currentImageIdIndex);
+            nunDb.watch(`${window.config.nunDb.key}-currentImageIdIndex`, (event) => {
+                if(nunDbStateHolder.isRemoteControlEnabled) {
+                    ignore = true;
+                    viewport.setImageIdIndex(event.value.currentImageIdIndex);
+                }
             })
-            nunDb.watch('client-camera', (event) => {
-                ignore = true;
-              viewport.setCamera(event.value);
-              viewport.render();
+            nunDb.watch(`${window.config.nunDb.key}-camera`, (event) => {
+                if(nunDbStateHolder.isRemoteControlEnabled) {
+                    ignore = true;
+                    viewport.setCamera(event.value);
+                    viewport.render();
+                }
             });
-        }, 500);
-    },
-    async onModeExit() {
-        nunDb.set('client-modeOpen', '/');
-    },
-};
+        } else {
+            console.log('not ready yet, will retry again in 500ms');
+            schedule();
+        }
+    }, 500);
+}
