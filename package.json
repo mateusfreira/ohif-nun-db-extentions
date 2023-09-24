@@ -1,5 +1,17 @@
 {
   "name": "ohif-nun-db",
+  "keyworkds": [
+    "ohif",
+    "ohif-extension",
+    "nun-db",
+    "react",
+    "typescript",
+    "webpack",
+    "babel",
+    "jest",
+    "npm-watch",
+    "npm"
+  ],
   "version": "1.2.1",
   "description": "",
   "module": "src/index.ts",
