@@ -57,11 +57,7 @@ export default {
      * @param {CommandsManager} params.commandsManager
      * @returns void
      */
-    async preRegistration({
-        servicesManager,
-        commandsManager,
-        configuration,
-    }) {
+    async preRegistration() {
         nunDb.watch(`${window.config.nunDb.key}-modeOpen`, (event) => {
             if(nunDbStateHolder.isRemoteControlEnabled) {
                 console.log('client-modeOpen', event);
@@ -72,11 +68,6 @@ export default {
                 }
             }
         });
-        // Registering new services
-        //servicesManager.registerService(MyNewService(servicesManager));
-        //const React = { useLayoutEffect: () =>{}};
-        // Todo fix connect int he nun-db react lib
-        //console.log(React);
     },
     async onModeEnter() {
         nunDb.set(`${window.config.nunDb.key}-modeOpen`, document.location.href);
