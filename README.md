@@ -16,14 +16,11 @@ OHIF, a widely-used open-source platform for medical imaging.
  - Multi-user interactions: With Nun-db, multiple users can simultaneously interact with OHIF, enabling collaborative viewing, annotation, and analysis of medical images.
 
 
-## Getting Started
-...
-
-
 ### Install Nundb lib
 * In bash command
 ```bash
-yarn add ohif-nun-db
+# In the OHIF root folder
+yarn add ohif-nun-db --ignore-workspace-root-check
 ```
 * platform/app/pluginConfig.json
 ```js
@@ -33,17 +30,30 @@ yarn add ohif-nun-db
     }
 ```
 
-* Add your Nundb configs to your default.js
-```json
-  nunDb: {
-    url: $nunDbUrl,
-    db: $databaseName,
-    user: 'client',
-    token: 'client-pwd',
-  },
+* Add your Nundb configs to your `platform/app/public/config/default.js`
 
+```javascript
+window.config = {
+  //.. Omitted for simplicity
+  dataSources: [
+  //... Omitted for simplicity
+  ],
+  hotkeys: [
+  //... Omitted for simplicity
+  ],
+  nunDb: {
+    URL: 'wss://ws-staging.nundb.org', // Nun-db server address
+    db: 'features-of-db',// Nun-db Db instance
+    user: 'client', // Nun-db db user
+    token: 'client-pwd',// Nun-db user token
+    key: 'client-YOUR_NAME_HERE', // Replace this key to a unique one
+  },
+};
 ```
 
 # Demo
 https://github.com/mateusfreira/ohif-nun-db-extentions/assets/234049/88a99874-678e-4b82-a4b1-cab934af27b6
 
+
+## Tutorial
+* Checkout the full tutorial in my blog [Here](https://mateusfreira.github.io/@mateusfreira-real-time-medical-image-collaboration-ohif-nun-db/).
