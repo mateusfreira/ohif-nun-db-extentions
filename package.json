@@ -12,7 +12,7 @@
     "npm-watch",
     "npm"
   ],
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "",
   "module": "src/index.ts",
   "main": "dist/umd/ohif-nun-db/index.umd.js",
