@@ -16,21 +16,12 @@ OHIF, a widely-used open-source platform for medical imaging.
  - Multi-user interactions: With Nun-db, multiple users can simultaneously interact with OHIF, enabling collaborative viewing, annotation, and analysis of medical images.
 
 
-### Install Nundb lib
-* In bash command
+### Install Nun-db lib
 ```bash
-# In the OHIF root folder
-yarn add ohif-nun-db --ignore-workspace-root-check
-```
-* platform/app/pluginConfig.json
-```js
-// Add this to the pluginConfig.json in extentions
-    {
-      "packageName": "ohif-nun-db"
-    }
+yarn cli add-extension ohif-nun-db
 ```
 
-* Add your Nundb configs to your `platform/app/public/config/default.js`
+* Add your Nun-db config to your `platform/app/public/config/default.js`
 
 ```javascript
 window.config = {
