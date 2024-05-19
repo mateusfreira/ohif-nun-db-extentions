@@ -5,11 +5,56 @@ import * as cornerstone from '@cornerstonejs/core';
 
 const config = window.config;
 
+type NunDbEvent = {
+  value: {
+    openTime: number;
+  };
+};
+type EventState = {
+  pedding: number;
+};
 const nunDbStateHolder = {
   isRemoteControlEnabled: true,
   openTime: new Date().getTime(),
   changedDisplaySetsIndex: ['default'],
+  eventsState: new Map<string, EventState>(),
 };
+
+function hasPeddingEvent(eventName: string) {
+  const eventsState = nunDbStateHolder.eventsState.get(eventName) || { pedding: 0 };
+  return eventsState.pedding > 0;
+}
+
+function resolvePeddingEvent(eventName: string) {
+  const eventsState = nunDbStateHolder.eventsState.get(eventName) || { pedding: 0 };
+  eventsState.pedding = eventsState.pedding - 1;
+}
+
+function eventTriggedBYNundb(eventName: string) {
+  const eventsState = nunDbStateHolder.eventsState.get(eventName) || { pedding: 0 };
+  eventsState.pedding = eventsState.pedding + 1;
+  nunDbStateHolder.eventsState.set(eventName, eventsState);
+}
+
+function sendEvent(eventName: string, data: any) {
+  if (hasPeddingEvent(eventName)) {
+    resolvePeddingEvent(eventName);
+    console.log('Ignoring this event from this client');
+    return;
+  }
+  return nunDb.set(eventName, data);
+}
+
+function watchEvent(eventName: string, callback: (event: NunDbEvent) => void) {
+  nunDb.watch(eventName, (event: NunDbEvent) => {
+    eventTriggedBYNundb(eventName);
+    if (isFromThisClient(event)) {
+      console.warn('Ignoring this event from this client');
+      return;
+    }
+    callback(event);
+  });
+}
 
 function isFromThisClient(event: { value: { openTime: number } }) {
   return nunDbStateHolder.openTime === event.value.openTime;
@@ -24,7 +69,7 @@ const nunDb = connect(
   true
 );
 
-const getCommandsModule = ({ servicesManager: any }) => {
+const getCommandsModule = ({ servicesManager }) => {
   return {
     definitions: {
       enalbeNunDb: {
@@ -62,7 +107,7 @@ const NunDbExtentionConfig = {
    * @returns void
    */
   async preRegistration() {
-    nunDb.watch(`${window.config.nunDb.key}-modeOpen`, (event: { value: string | URL }) => {
+    nunDb.watch(`${config.nunDb.key}-modeOpen`, (event: { value: string | URL }) => {
       if (nunDbStateHolder.isRemoteControlEnabled) {
         console.log('client-modeOpen', event);
         const newAddress = new URL(event.value);
@@ -109,7 +154,9 @@ function watchGridStateEvent(ViewportGridService: any, DisplaySetService: any) {
         openTime: nunDbStateHolder.openTime,
       };
       if (
-        nunDbStateHolder.changedDisplaySetsIndex.every(dsi => !changedDisplaySetsIndex.includes(dsi))
+        nunDbStateHolder.changedDisplaySetsIndex.every(
+          dsi => !changedDisplaySetsIndex.includes(dsi)
+        )
       ) {
         nunDb.set(`${config.nunDb.key}-grid-state`, eventPropagate);
         nunDbStateHolder.changedDisplaySetsIndex = changedDisplaySetsIndex;
@@ -162,7 +209,7 @@ function cornestoneEventListener(viewport: any, event: string, key: string) {
       };
       nunDb.set(`${key}`, eventPropagate);
       const currentImageIdIndex = viewport.getCurrentImageIdIndex();
-      nunDb.set(`${config.nunDb.key}-currentImageIdIndex`, {
+      sendEvent(`${config.nunDb.key}-currentImageIdIndex`, {
         openTime: nunDbStateHolder.openTime,
         currentImageIdIndex,
       });
@@ -174,8 +221,8 @@ function cornestoneEventListener(viewport: any, event: string, key: string) {
   nunDb.watch(`${key}`, (event: { value: any; openTime: number }) => {
     if (nunDbStateHolder.isRemoteControlEnabled && !isFromThisClient(event)) {
       state.ignore = true;
-      !viewport.isDisabled && viewport.setCamera(event['value']);
-      !viewport.isDisabled && viewport.render();
+      //!viewport.isDisabled && viewport.setCamera(event['value']);
+      //!viewport.isDisabled && viewport.render();
     }
   });
 }
@@ -194,7 +241,7 @@ function scheduleCornestoneCameraWatch() {
         `${config.nunDb.key}-camera`
       );
 
-      nunDb.watch(`${config.nunDb.key}-currentImageIdIndex`, event => {
+      watchEvent(`${config.nunDb.key}-currentImageIdIndex`, event => {
         console.log('Here will watch current index');
         if (nunDbStateHolder.isRemoteControlEnabled && !isFromThisClient(event)) {
           !viewport.isDisabled && viewport.setImageIdIndex(event.value.currentImageIdIndex);
