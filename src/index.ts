@@ -8,9 +8,10 @@ const config = window.config;
 const nunDbStateHolder = {
   isRemoteControlEnabled: true,
   openTime: new Date().getTime(),
+  changedDisplaySetsIndex: ['default'],
 };
 
-function isFromThisClient(event: { value : { openTime: number } }) {
+function isFromThisClient(event: { value: { openTime: number } }) {
   return nunDbStateHolder.openTime === event.value.openTime;
 }
 
@@ -75,7 +76,11 @@ const NunDbExtentionConfig = {
       }
     });
   },
-  async onModeEnter() {
+  async onModeEnter({ servicesManager }) {
+    const ViewportGridService = servicesManager.services.ViewportGridService;
+    const DisplaySetService = servicesManager.services.DisplaySetService;
+    watchGridStateEvent(ViewportGridService, DisplaySetService);
+
     nunDb.set(`${config.nunDb.key}-modeOpen`, document.location.href);
     scheduleCornestoneCameraWatch();
   },
@@ -85,6 +90,62 @@ const NunDbExtentionConfig = {
 };
 
 export default NunDbExtentionConfig;
+
+function watchGridStateEvent(ViewportGridService: any, DisplaySetService: any) {
+  ViewportGridService.subscribe(ViewportGridService.EVENTS.GRID_STATE_CHANGED, e => {
+    setTimeout(() => {
+      const gridState = ViewportGridService.getState();
+      const gridViewports = gridState.viewports.values().toArray();
+
+      const activeDisplaySets = DisplaySetService.activeDisplaySets;
+      const displaysetIdList = activeDisplaySets.map(adi => adi.displaySetInstanceUID);
+      const changedDisplaySetsIndex = gridViewports.map(vp =>
+        displaysetIdList.indexOf(vp.displaySetInstanceUIDs[0])
+      );
+
+      const eventPropagate = {
+        ...e,
+        changedDisplaySetsIndex,
+        openTime: nunDbStateHolder.openTime,
+      };
+      if (
+        nunDbStateHolder.changedDisplaySetsIndex.every(dsi => !changedDisplaySetsIndex.includes(dsi))
+      ) {
+        nunDb.set(`${config.nunDb.key}-grid-state`, eventPropagate);
+        nunDbStateHolder.changedDisplaySetsIndex = changedDisplaySetsIndex;
+      }
+    }, 1);
+  });
+
+  nunDb.watch(`${config.nunDb.key}-grid-state`, nunDbEvent => {
+    if (isFromThisClient(nunDbEvent)) {
+      return;
+    }
+    nunDbStateHolder.changedDisplaySetsIndex = nunDbEvent.value.changedDisplaySetsIndex;
+
+    ViewportGridService.setDisplaySetsForViewports([
+      {
+        viewportId: nunDbEvent.value.state.activeViewportId,
+        displaySetInstanceUIDs: [
+          DisplaySetService.activeDisplaySets.map(adi => adi.displaySetInstanceUID)[
+            nunDbEvent.value.changedDisplaySetsIndex[0]
+          ],
+        ],
+        viewportOptions: {
+          viewportType: 'stack',
+          viewportId: 'default',
+          toolGroupId: 'default',
+        },
+        displaySetOptions: [
+          {
+            id: 'defaultDisplaySetId',
+            options: {},
+          },
+        ],
+      },
+    ]);
+  });
+}
 
 function cornestoneEventListener(viewport: any, event: string, key: string) {
   const element: Element = viewport.element;
@@ -113,8 +174,8 @@ function cornestoneEventListener(viewport: any, event: string, key: string) {
   nunDb.watch(`${key}`, (event: { value: any; openTime: number }) => {
     if (nunDbStateHolder.isRemoteControlEnabled && !isFromThisClient(event)) {
       state.ignore = true;
-      viewport.setCamera(event['value']);
-      viewport.render();
+      !viewport.isDisabled && viewport.setCamera(event['value']);
+      !viewport.isDisabled && viewport.render();
     }
   });
 }
@@ -136,7 +197,7 @@ function scheduleCornestoneCameraWatch() {
       nunDb.watch(`${config.nunDb.key}-currentImageIdIndex`, event => {
         console.log('Here will watch current index');
         if (nunDbStateHolder.isRemoteControlEnabled && !isFromThisClient(event)) {
-          viewport.setImageIdIndex(event.value.currentImageIdIndex);
+          !viewport.isDisabled && viewport.setImageIdIndex(event.value.currentImageIdIndex);
         }
       });
     } else {
