@@ -207,7 +207,7 @@ function cornestoneEventListener(viewport: any, event: string, key: string) {
         ...evt.detail.camera,
         openTime: nunDbStateHolder.openTime,
       };
-      nunDb.set(`${key}`, eventPropagate);
+      sendEvent(`${key}`, eventPropagate);
       const currentImageIdIndex = viewport.getCurrentImageIdIndex();
       sendEvent(`${config.nunDb.key}-currentImageIdIndex`, {
         openTime: nunDbStateHolder.openTime,
@@ -218,11 +218,11 @@ function cornestoneEventListener(viewport: any, event: string, key: string) {
     }
   });
 
-  nunDb.watch(`${key}`, (event: { value: any; openTime: number }) => {
+  watchEvent(`${key}`, (event: { value: any; openTime: number }) => {
     if (nunDbStateHolder.isRemoteControlEnabled && !isFromThisClient(event)) {
       state.ignore = true;
-      //!viewport.isDisabled && viewport.setCamera(event['value']);
-      //!viewport.isDisabled && viewport.render();
+      !viewport.isDisabled && viewport.setCamera(event['value']);
+      !viewport.isDisabled && viewport.render();
     }
   });
 }
