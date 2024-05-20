@@ -232,8 +232,7 @@ function scheduleCornestoneCameraWatch() {
     const cornestoneElement = cornerstone.getEnabledElements()[0];
     const isReady = !!cornestoneElement;
     if (isReady) {
-      const viewport = cornerstone.getEnabledElements()[0].viewport;
-      const element = viewport.element;
+      const viewport = getViewport();
       // Todo test event listener on OHIF
       cornestoneEventListener(
         viewport,
@@ -253,3 +252,9 @@ function scheduleCornestoneCameraWatch() {
     }
   }, 500);
 }
+function getViewport() {
+    const viewport = cornerstone.getEnabledElements()[0].viewport;
+    const element = viewport.element;
+    return viewport;
+}
+
