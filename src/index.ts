@@ -2,6 +2,7 @@ import { connect } from 'nun-db-react';
 
 import React from 'react';
 import * as cornerstone from '@cornerstonejs/core';
+import { HangingProtocolService } from '@ohif/core';
 
 const config = window.config;
 
@@ -68,8 +69,10 @@ const nunDb = connect(
   config.nunDb.token,
   true
 );
+window.ohifNunDb = nunDb;
 
 const getCommandsModule = ({ servicesManager }) => {
+  console.log('getCommandsModule', servicesManager.services.hangingProtocolService);
   return {
     definitions: {
       enalbeNunDb: {
@@ -125,6 +128,7 @@ const NunDbExtentionConfig = {
     const ViewportGridService = servicesManager.services.ViewportGridService;
     const DisplaySetService = servicesManager.services.DisplaySetService;
     watchGridStateEvent(ViewportGridService, DisplaySetService);
+    watchHPChangeEvent(servicesManager.services.hangingProtocolService);
 
     nunDb.set(`${config.nunDb.key}-modeOpen`, document.location.href);
     scheduleCornestoneCameraWatch();
@@ -135,6 +139,29 @@ const NunDbExtentionConfig = {
 };
 
 export default NunDbExtentionConfig;
+
+function watchHPChangeEvent(
+  hangingProtocolService: HangingProtocolService,
+) {
+  hangingProtocolService.subscribe(
+    HangingProtocolService.EVENTS.PROTOCOL_CHANGED, async (e) => {
+      console.log('HangingProtocolService', e);
+      const lastEvent = await nunDb.get(`${config.nunDb.key}-hp`);
+      if(lastEvent.value.protocol.id !== e.protocol.id){
+        nunDb.set(`${config.nunDb.key}-hp`, e);
+      }
+    });
+
+  nunDb.watch(`${config.nunDb.key}-hp`, nunDbEvent => {
+    if (isFromThisClient(nunDbEvent)) {
+      console.log('Ignoring this event from this client');
+      return;
+    }
+    if (!hangingProtocolService.activeProtocolIds.includes(nunDbEvent.value.protocol.id)) {
+      hangingProtocolService.setProtocol(nunDbEvent.value.protocol.id);
+    }
+  });
+}
 
 function watchGridStateEvent(ViewportGridService: any, DisplaySetService: any) {
   ViewportGridService.subscribe(ViewportGridService.EVENTS.GRID_STATE_CHANGED, e => {
